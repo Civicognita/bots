@@ -357,7 +357,7 @@ export function formatTeamResult(result: TeamOrchestratorResult): string {
 // CLI
 // ============================================================================
 
-if (typeof require !== 'undefined' && require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   autoDetectAndSet();
   const action = process.argv[2] || 'run';
 

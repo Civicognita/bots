@@ -125,7 +125,7 @@ export function extractQueueTexts(input: string): string[] {
 }
 
 // CLI support - parse from stdin or argument
-if (typeof require !== 'undefined' && require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const input = process.argv[2] || '';
   const result = parseShortcodes(input);
   console.log(JSON.stringify(result, null, 2));

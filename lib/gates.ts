@@ -378,7 +378,7 @@ function extractTestSummary(dispatches: WorkerDispatch[]): TestSummary | undefin
 }
 
 // CLI support
-if (typeof require !== 'undefined' && require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const action = process.argv[2];
   const jobId = process.argv[3];
   const decision = process.argv[4];

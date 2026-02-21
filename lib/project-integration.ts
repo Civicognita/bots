@@ -8,7 +8,7 @@
  * implement the ProjectIntegration interface and call setIntegration().
  */
 
-import { JobStatus } from './job-manager.js';
+import type { JobStatus } from './job-manager.js';
 
 // ============================================================================
 // Types

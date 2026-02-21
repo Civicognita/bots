@@ -9,19 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { findRoute, RouteMatch } from './router.js';
 import { getStatePath } from './integrations/detect.js';
-
-// Forward declaration - project-integration imports job-manager, so we lazy-load
-let projectIntegration: typeof import('./project-integration.js') | null = null;
-function getProjectIntegration() {
-  if (!projectIntegration) {
-    try {
-      projectIntegration = require('./project-integration.js');
-    } catch {
-      // Project integration not available
-    }
-  }
-  return projectIntegration;
-}
+import * as projectIntegrationModule from './project-integration.js';
 
 // ============================================================================
 // Types
@@ -181,7 +169,7 @@ export function createJob(
   };
 
   // Auto-parse project references from queue text
-  const pi = getProjectIntegration();
+  const pi = projectIntegrationModule;
   if (pi) {
     const refs = pi.parseReferences(queueText);
     if (refs.task_id || refs.task_number || refs.story_id || refs.story_number) {
@@ -474,8 +462,8 @@ export function popNextFrame(configPath?: string): string | null {
   return next;
 }
 
-// CLI support
-if (typeof require !== 'undefined' && require.main === module) {
+// CLI support (ESM entry point detection)
+if (import.meta.url === `file://${process.argv[1]}`) {
   const action = process.argv[2];
   const arg = process.argv[3];
 

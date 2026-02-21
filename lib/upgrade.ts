@@ -270,11 +270,16 @@ export function upgrade(sourcePath: string, check: boolean = false): UpgradeResu
 
   if (check) {
     result.counts.lib = countDir(libSrc, '.ts') + countDir(integSrc, '.ts');
-    result.actions.push(`Would copy ${result.counts.lib} lib modules`);
+    result.actions.push(`Would copy ${result.counts.lib} lib modules + tsconfig`);
   } else {
     result.counts.lib = copyDir(libSrc, libDest, '.ts');
     result.counts.lib += copyDir(integSrc, integDest, '.ts');
-    result.actions.push(`Copied ${result.counts.lib} lib modules`);
+    // Copy tsconfig for type-checking support
+    const tsconfigSrc = path.join(resolvedSource, 'tsconfig.json');
+    if (fs.existsSync(tsconfigSrc)) {
+      fs.copyFileSync(tsconfigSrc, path.join(projectRoot, '.bots', 'tsconfig.json'));
+    }
+    result.actions.push(`Copied ${result.counts.lib} lib modules + tsconfig`);
   }
 
   // --- Copy schemas ---

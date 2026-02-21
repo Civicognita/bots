@@ -219,9 +219,6 @@ export function processInput(input: string, configPath?: string): {
   next: string | null;
   hasWork: boolean;
 } {
-  const { parseShortcodes } = require('./parser.js');
-  const { createJob, setNextFrame } = require('./job-manager.js');
-
   const parsed = parseShortcodes(input);
   const jobs: import('./job-manager.js').Job[] = [];
 

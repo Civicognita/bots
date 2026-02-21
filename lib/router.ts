@@ -128,7 +128,7 @@ export function routeQueues(queueTexts: string[], configPath?: string): Array<{
 }
 
 // CLI support
-if (typeof require !== 'undefined' && require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const text = process.argv[2] || '';
   const result = findRoute(text);
   console.log(JSON.stringify(result, null, 2));

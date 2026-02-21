@@ -21,19 +21,36 @@ import { NexusIntegration } from './nexus.js';
 
 /**
  * Check if the current project is a Nexus repository.
- * Requires both PRIME core and .ai/.nexus/ directory.
+ * Detects PRIME core at .nexus/core/GOSPEL.md — the authoritative signal.
+ * (.ai/.nexus/ is runtime session state, may not exist on fresh clone.)
  */
 function isNexusProject(cwd: string): boolean {
   const gospelPath = path.join(cwd, '.nexus', 'core', 'GOSPEL.md');
-  const aiNexusDir = path.join(cwd, '.ai', '.nexus');
-  return fs.existsSync(gospelPath) && fs.existsSync(aiNexusDir);
+  return fs.existsSync(gospelPath);
 }
 
 /**
  * Check if the project has Tynn MCP configured.
- * Looks for "tynn" in Claude settings mcpServers.
+ * Looks for "tynn" in:
+ *   1. .mcp.json — mcpServers.tynn (standard MCP config)
+ *   2. .claude/settings.local.json — enabledMcpjsonServers or mcpServers
  */
 function hasTynnMcp(cwd: string): boolean {
+  // Check .mcp.json first (standard MCP configuration)
+  const mcpJsonPath = path.join(cwd, '.mcp.json');
+  try {
+    const content = fs.readFileSync(mcpJsonPath, 'utf-8');
+    const mcpConfig = JSON.parse(content);
+    if (mcpConfig.mcpServers && typeof mcpConfig.mcpServers === 'object') {
+      if (Object.keys(mcpConfig.mcpServers).some(k => k.toLowerCase().includes('tynn'))) {
+        return true;
+      }
+    }
+  } catch {
+    // .mcp.json not found or invalid — continue to settings check
+  }
+
+  // Check .claude/settings.local.json
   const settingsPath = path.join(cwd, '.claude', 'settings.local.json');
   try {
     const content = fs.readFileSync(settingsPath, 'utf-8');

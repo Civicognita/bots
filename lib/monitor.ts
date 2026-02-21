@@ -308,7 +308,7 @@ export function formatMonitorResult(result: MonitorResult): string {
 // CLI
 // ============================================================================
 
-if (typeof require !== 'undefined' && require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const action = process.argv[2] || 'check';
 
   switch (action) {

@@ -39,7 +39,7 @@ fi
 # ============================================================================
 
 info "Creating directories..."
-mkdir -p "$PROJECT_ROOT/.bots/lib"
+mkdir -p "$PROJECT_ROOT/.bots/lib/integrations"
 mkdir -p "$PROJECT_ROOT/.bots/state"
 mkdir -p "$PROJECT_ROOT/.bots/schemas"
 mkdir -p "$PROJECT_ROOT/.ai/handoff"
@@ -61,7 +61,9 @@ mkdir -p "$PROJECT_ROOT/scripts"
 
 info "Copying core modules..."
 cp "$BOTS_SRC/lib/"*.ts "$PROJECT_ROOT/.bots/lib/"
-ok "  Copied $(ls "$BOTS_SRC/lib/"*.ts | wc -l | tr -d ' ') TypeScript modules"
+cp "$BOTS_SRC/lib/integrations/"*.ts "$PROJECT_ROOT/.bots/lib/integrations/"
+cp "$BOTS_SRC/tsconfig.json" "$PROJECT_ROOT/.bots/tsconfig.json"
+ok "  Copied $(find "$BOTS_SRC/lib" -name '*.ts' | wc -l | tr -d ' ') TypeScript modules + tsconfig"
 
 # ============================================================================
 # Step 4: Copy workers

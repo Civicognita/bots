@@ -26,7 +26,7 @@ if (-not (Test-Path "$ProjectRoot/package.json") -and -not (Test-Path "$ProjectR
 # Step 2: Create directories
 Info "Creating directories..."
 $dirs = @(
-    ".bots/lib", ".bots/state", ".bots/schemas",
+    ".bots/lib", ".bots/lib/integrations", ".bots/state", ".bots/schemas",
     ".ai/handoff", ".ai/checkpoints",
     ".claude/agents/workers/code", ".claude/agents/workers/k",
     ".claude/agents/workers/ux", ".claude/agents/workers/strat",
@@ -41,8 +41,10 @@ foreach ($d in $dirs) {
 # Step 3: Copy core modules
 Info "Copying core modules..."
 Copy-Item "$BotsSrc/lib/*.ts" "$ProjectRoot/.bots/lib/" -Force
-$moduleCount = (Get-ChildItem "$BotsSrc/lib/*.ts").Count
-Ok "  Copied $moduleCount TypeScript modules"
+Copy-Item "$BotsSrc/lib/integrations/*.ts" "$ProjectRoot/.bots/lib/integrations/" -Force
+Copy-Item "$BotsSrc/tsconfig.json" "$ProjectRoot/.bots/tsconfig.json" -Force
+$moduleCount = (Get-ChildItem "$BotsSrc/lib" -Recurse -Filter "*.ts").Count
+Ok "  Copied $moduleCount TypeScript modules + tsconfig"
 
 # Step 4: Copy workers
 Info "Copying worker definitions..."

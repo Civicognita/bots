@@ -71,11 +71,16 @@ n:> Review the API rate limiting proposal
 ### CLI
 
 ```bash
-npm run tm status          # Show active jobs
-npm run tm jobs            # List all jobs (including completed)
-npm run tm approve job-001 # Approve checkpoint, continue to next phase
-npm run tm reject job-001  # Reject and stop
-npm run tm -- job job-001  # Show job details
+npm run tm status              # Show active jobs
+npm run tm jobs                # List all jobs (including completed)
+npm run tm approve job-001     # Approve checkpoint, continue to next phase
+npm run tm reject job-001      # Reject and stop
+npm run tm -- job job-001      # Show job details
+npm run tm orchestrate         # Process all pending work
+npm run tm monitor             # Check worker completion status
+npm run tm mode                # Show current execution mode
+npm run tm team-status         # Show team mode status
+npm run tm detect              # Show detected integration
 npm run tm upgrade ~/.nexus-bots          # Upgrade from source
 npm run tm upgrade ~/.nexus-bots --check  # Dry-run (show what would change)
 ```
@@ -152,6 +157,54 @@ Some workers automatically trigger follow-up workers:
 | `auto` | Automatically proceed to next phase |
 | `checkpoint` | Pause for user review |
 | `terminal` | Job complete, offer merge |
+
+## Execution Modes
+
+BOTS supports two execution modes for dispatching workers. Switch modes with:
+
+```bash
+npm run tm mode subagent   # Default — workers run as Task tool subagents
+npm run tm mode team       # Workers run as Claude Code agent teammates
+```
+
+Check current mode:
+```bash
+npm run tm mode
+```
+
+### Subagent Mode (default)
+
+Workers are spawned via the `Task` tool as isolated subagents. Each worker runs in its own context with a dedicated prompt and tool set. The orchestrator manages the lifecycle directly.
+
+### Team Mode
+
+Workers are spawned as **teammates** using Claude Code's agent teams feature. BOTS translates job phases into a shared task list with dependency wiring (`blockedBy`), then the team lead creates and assigns tasks to teammates.
+
+**How it works:**
+1. `npm run tm orchestrate` builds an execution plan mapping phases to team tasks
+2. Tasks are created in the shared task list with proper `blockedBy` dependencies
+3. Teammates pick up tasks, execute in the shared worktree, and write handoff JSON
+4. A `TaskCompleted` hook calls `team-reconcile` to update BOTS state when each worker finishes
+5. A `TeammateIdle` hook checks for pending BOTS tasks via `team-pending`
+
+**Team CLI commands:**
+```bash
+npm run tm mode team              # Switch to team mode
+npm run tm team-status            # Show team mode status and active team jobs
+npm run tm -- team-reconcile <jobId> <phaseId> <worker> [tid]  # Reconcile task completion
+npm run tm -- team-pending <name> # Check pending tasks for a teammate
+npm run tm orchestrate --tasks       # Show task payloads
+npm run tm orchestrate --instructions  # Show team lead instructions
+```
+
+**Configuration** — team settings are stored in `taskmaster.json`:
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `team_name` | `bots-team` | Name for the agent team |
+| `teammate_mode` | `in-process` | How teammates are spawned |
+| `max_teammates` | `4` | Maximum concurrent teammates |
+| `require_plan_approval` | `false` | Whether teammates need plan approval |
 
 ## Integrations
 

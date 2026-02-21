@@ -2,6 +2,7 @@
   "name": "nexus-bots",
   "version": "1.0.0",
   "description": "BOTS — Bolt-On Taskmaster System for Claude Code",
+  "type": "module",
   "private": true,
   "scripts": {
     "tm": "npx tsx lib/cli.ts",

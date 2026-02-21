@@ -424,7 +424,7 @@ const commands: Record<string, (args: string[]) => void> = {
       return;
     }
 
-    const result = orchestrate();
+    const result = orchestrate() as import('./orchestrator.js').OrchestratorResult;
 
     if (args.includes('--json')) {
       output(result);

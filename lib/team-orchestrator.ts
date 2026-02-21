@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   Job,
+  TeamConfig,
   getActiveJobs,
   startJob,
   loadState
@@ -63,11 +64,16 @@ export function orchestrateTeam(
   parentCoa: string = 'BOTS.COA'
 ): TeamOrchestratorResult {
   const state = loadState();
-  const teamConfig = state.team_config;
+  const teamConfig: TeamConfig = state.team_config || {
+    team_name: 'bots-team',
+    teammate_mode: 'in-process',
+    max_teammates: 4,
+    require_plan_approval: false
+  };
 
   const result: TeamOrchestratorResult = {
     processed: 0,
-    teamName: teamConfig?.team_name || 'bots-team',
+    teamName: teamConfig.team_name,
     tasksCreated: [],
     teammatesNeeded: [],
     errors: [],
@@ -98,7 +104,7 @@ export function orchestrateTeam(
 
 function processNewTeamJob(
   job: Job,
-  teamConfig: typeof loadState extends () => infer S ? (S extends { team_config?: infer T } ? T : never) : never,
+  teamConfig: TeamConfig,
   result: TeamOrchestratorResult
 ): void {
   // Start the job
@@ -130,7 +136,7 @@ function processNewTeamJob(
       name,
       prompt: buildTeammatePrompt(startedJob, task.metadata.worker, task.metadata.workerTid, phase),
       model: task.metadata.model,
-      planApproval: (teamConfig as any)?.require_plan_approval ?? false
+      planApproval: teamConfig.require_plan_approval
     };
 
     result.teammatesNeeded.push(spawnInfo);
@@ -147,7 +153,7 @@ function processNewTeamJob(
 
 function processRunningTeamJob(
   job: Job,
-  teamConfig: any,
+  teamConfig: TeamConfig,
   result: TeamOrchestratorResult
 ): void {
   // In team mode, running jobs are managed via the shared task list.

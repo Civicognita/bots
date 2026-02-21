@@ -8,6 +8,8 @@
  */
 
 // Parser - shortcode extraction
+import { parseShortcodes as _parseShortcodes } from './parser.js';
+import { createJob as _createJob, setNextFrame as _setNextFrame } from './job-manager.js';
 export {
   parseShortcodes,
   hasShortcodes,
@@ -219,16 +221,16 @@ export function processInput(input: string, configPath?: string): {
   next: string | null;
   hasWork: boolean;
 } {
-  const parsed = parseShortcodes(input);
+  const parsed = _parseShortcodes(input);
   const jobs: import('./job-manager.js').Job[] = [];
 
   for (const queue of parsed.queues) {
-    const job = createJob(queue.content, configPath);
+    const job = _createJob(queue.content, configPath);
     jobs.push(job);
   }
 
   if (parsed.next) {
-    setNextFrame(parsed.next.content, configPath);
+    _setNextFrame(parsed.next.content, configPath);
   }
 
   return {

@@ -13,6 +13,8 @@ export interface RoutingRule {
   description: string;
   entry: string;
   keywords: string[];
+  /** Nexus extended format: suggested_workers instead of entry */
+  suggested_workers?: string[];
 }
 
 export interface RouteMatch {
@@ -44,7 +46,27 @@ export function loadRoutingRules(configPath?: string): Record<string, RoutingRul
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const config = JSON.parse(content);
-    const rules: Record<string, RoutingRule> = config.routing || {};
+    const routing = config.routing || {};
+    const rules: Record<string, RoutingRule> = {};
+
+    // Determine source: BOTS flat format or Nexus domain_hints format
+    const source = routing.domain_hints || routing;
+
+    for (const [key, value] of Object.entries(source)) {
+      // Skip metadata keys (start with _ or are not objects)
+      if (key.startsWith('_') || typeof value !== 'object' || value === null) continue;
+      const rule = value as Record<string, any>;
+      // Skip if no keywords array
+      if (!Array.isArray(rule.keywords)) continue;
+
+      rules[key] = {
+        description: rule.description || key,
+        entry: rule.entry || (Array.isArray(rule.suggested_workers) ? rule.suggested_workers[0] : '$W.k.analyst'),
+        keywords: rule.keywords,
+        suggested_workers: rule.suggested_workers
+      };
+    }
+
     routingRulesCache = rules;
     return rules;
   } catch (error) {

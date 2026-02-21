@@ -124,23 +124,32 @@ if (Test-Path $settingsFile) {
     $hasHook = $false
     if ($settings.hooks -and $settings.hooks.UserPromptSubmit) {
         foreach ($h in $settings.hooks.UserPromptSubmit) {
+            # Check nested hooks array format
+            if ($h.hooks) {
+                foreach ($inner in $h.hooks) {
+                    if ($inner.command -match "taskmaster-hook") { $hasHook = $true }
+                }
+            }
+            # Also check legacy flat format for backwards compatibility
             if ($h.command -match "taskmaster-hook") { $hasHook = $true }
         }
     }
     if (-not $hasHook) {
         if (-not $settings.hooks) { $settings | Add-Member -NotePropertyName hooks -NotePropertyValue @{} }
         if (-not $settings.hooks.UserPromptSubmit) { $settings.hooks | Add-Member -NotePropertyName UserPromptSubmit -NotePropertyValue @() -Force }
-        $settings.hooks.UserPromptSubmit += @{ type = "command"; command = "bash scripts/taskmaster-hook.sh" }
+        # Claude Code requires nested { hooks: [...] } format per settings schema
+        $settings.hooks.UserPromptSubmit += @{ hooks = @( @{ type = "command"; command = "bash scripts/taskmaster-hook.sh" } ) }
         $settings | ConvertTo-Json -Depth 10 | Set-Content $settingsFile
         Ok "  Hook registered"
     } else {
         Ok "  Hook already registered"
     }
 } else {
+    # Claude Code requires nested { hooks: [...] } format per settings schema
     @{
         hooks = @{
             UserPromptSubmit = @(
-                @{ type = "command"; command = "bash scripts/taskmaster-hook.sh" }
+                @{ hooks = @( @{ type = "command"; command = "bash scripts/taskmaster-hook.sh" } ) }
             )
         }
     } | ConvertTo-Json -Depth 10 | Set-Content $settingsFile

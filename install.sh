@@ -176,15 +176,17 @@ if [ -f "$SETTINGS_FILE" ]; then
   if grep -q "taskmaster-hook" "$SETTINGS_FILE" 2>/dev/null; then
     ok "  Hook already registered"
   else
-    # Add hook to existing settings
+    # Add hook to existing settings (Claude Code requires nested { hooks: [...] } format)
     node -e "
       const fs = require('fs');
       const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
       settings.hooks = settings.hooks || {};
       settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
       settings.hooks.UserPromptSubmit.push({
-        type: 'command',
-        command: 'bash scripts/taskmaster-hook.sh'
+        hooks: [{
+          type: 'command',
+          command: 'bash scripts/taskmaster-hook.sh'
+        }]
       });
       fs.writeFileSync('$SETTINGS_FILE', JSON.stringify(settings, null, 2) + '\n');
     " 2>/dev/null && ok "  Hook registered in settings.local.json" || warn "  Could not register hook — add manually"
@@ -196,8 +198,12 @@ else
   "hooks": {
     "UserPromptSubmit": [
       {
-        "type": "command",
-        "command": "bash scripts/taskmaster-hook.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/taskmaster-hook.sh"
+          }
+        ]
       }
     ]
   }

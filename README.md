@@ -1,6 +1,6 @@
 # BOTS — Bolt-On Taskmaster System
 
-Multi-agent work queue orchestration for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Add parallel worker execution to any project with a single install command.
+Worker team orchestration for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Describe what you want done, and BOTS assembles a team of specialized workers to execute it — routing tasks to the right roles, coordinating handoffs between phases, and gating progress with checkpoints. Install into any project with a single command.
 
 ## Install
 
@@ -51,10 +51,10 @@ w:> Add a logout button to the dashboard header
 
 BOTS automatically:
 1. Parses the shortcode and extracts the task description
-2. Routes to the right worker type based on keywords (e.g., "Add button" routes to `code.engineer`)
-3. Creates a WORK{JOB} with its own isolated git worktree
-4. Spawns background workers to execute the job
-5. Pauses at checkpoints for your review before merging
+2. Routes to the right entry worker based on keywords (e.g., "Add button" routes to `code.engineer`)
+3. Assembles a worker team — entry worker plus any enforced chain followers (e.g., `hacker` always brings `tester`)
+4. Creates a WORK{JOB} with its own isolated git worktree
+5. Orchestrates the team through phases, gating progress with checkpoints for your review
 
 **Queue multiple jobs at once** — each `w:>` becomes a separate parallel job:
 ```
@@ -87,6 +87,8 @@ npm run tm upgrade ~/.nexus-bots --check  # Dry-run (show what would change)
 
 ## How It Works
 
+Each job gets a **worker team** assembled from the catalog. The router picks an entry worker based on task keywords, enforced chains add required followers, and the orchestrator coordinates the team through phased execution.
+
 ```
 User types "w:> Fix login bug"
     │
@@ -94,25 +96,32 @@ User types "w:> Fix login bug"
 Hook detects w:> shortcode
     │
     ▼
-CLI creates WORK{JOB} → routes to $W.code.hacker
+Router selects entry worker → $W.code.hacker
     │
     ▼
-Orchestrator spawns worker in background
+Team assembled: hacker + tester (enforced chain)
     │
     ▼
-Worker executes in isolated worktree
+WORK{JOB} created with isolated git worktree
     │
     ▼
-Enforced chain: hacker → tester (auto)
+Phase 1: hacker executes fix in worktree
+    │  (auto gate)
+    ▼
+Phase 2: tester validates the fix
+    │  (checkpoint gate)
+    ▼
+User reviews changes → approve or reject
     │
     ▼
-Checkpoint gate → user reviews changes
-    │
-    ▼
-Approve → merge to main, cleanup
+Merge to main, cleanup worktree
 ```
 
+The two **execution modes** control how the team is dispatched — as Task tool subagents (default) or as Claude Code agent teammates. See [Execution Modes](#execution-modes).
+
 ## Worker Catalog
+
+BOTS draws from a catalog of specialized workers to assemble teams. The router picks an entry worker, and enforced chains pull in required teammates automatically.
 
 ### Root Workers (7)
 
@@ -141,7 +150,7 @@ Approve → merge to main, cleanup
 
 ### Enforced Chains
 
-Some workers automatically trigger follow-up workers:
+Some workers always bring a teammate — the chain target is added to the team automatically:
 
 | Trigger Worker | Followed By |
 |----------------|-------------|
@@ -160,44 +169,39 @@ Some workers automatically trigger follow-up workers:
 
 ## Execution Modes
 
-BOTS supports two execution modes for dispatching workers. Switch modes with:
+Once a worker team is assembled, BOTS needs to dispatch each worker. The **execution mode** controls how that happens.
 
 ```bash
-npm run tm mode subagent   # Default — workers run as Task tool subagents
-npm run tm mode team       # Workers run as Claude Code agent teammates
-```
-
-Check current mode:
-```bash
-npm run tm mode
+npm run tm mode subagent   # Default — Task tool subagents
+npm run tm mode team       # Claude Code agent teammates
+npm run tm mode            # Show current mode
 ```
 
 ### Subagent Mode (default)
 
-Workers are spawned via the `Task` tool as isolated subagents. Each worker runs in its own context with a dedicated prompt and tool set. The orchestrator manages the lifecycle directly.
+Each worker in the team is spawned via the `Task` tool as an isolated subagent. The orchestrator manages the full lifecycle: dispatching workers, collecting handoffs, evaluating gates, and advancing phases.
 
 ### Team Mode
 
-Workers are spawned as **teammates** using Claude Code's agent teams feature. BOTS translates job phases into a shared task list with dependency wiring (`blockedBy`), then the team lead creates and assigns tasks to teammates.
+Workers are dispatched as **teammates** using Claude Code's agent teams feature. BOTS translates the team's phases into a shared task list with dependency wiring, then a team lead coordinates execution.
 
-**How it works:**
-1. `npm run tm orchestrate` builds an execution plan mapping phases to team tasks
-2. Tasks are created in the shared task list with proper `blockedBy` dependencies
-3. Teammates pick up tasks, execute in the shared worktree, and write handoff JSON
-4. A `TaskCompleted` hook calls `team-reconcile` to update BOTS state when each worker finishes
-5. A `TeammateIdle` hook checks for pending BOTS tasks via `team-pending`
+**Flow:**
+1. Orchestrator builds an execution plan — one task per worker, with `blockedBy` dependencies reflecting phase order and enforced chains
+2. Tasks are created in the shared task list; teammates pick them up
+3. Each teammate executes its worker role in the shared worktree and writes handoff JSON on completion
+4. `TaskCompleted` hook reconciles BOTS state when a teammate finishes
+5. `TeammateIdle` hook checks for pending BOTS work to assign
 
-**Team CLI commands:**
+**Team CLI:**
 ```bash
-npm run tm mode team              # Switch to team mode
-npm run tm team-status            # Show team mode status and active team jobs
-npm run tm -- team-reconcile <jobId> <phaseId> <worker> [tid]  # Reconcile task completion
-npm run tm -- team-pending <name> # Check pending tasks for a teammate
-npm run tm orchestrate --tasks       # Show task payloads
-npm run tm orchestrate --instructions  # Show team lead instructions
+npm run tm team-status                                         # Active team jobs
+npm run tm orchestrate --tasks                                 # Show task payloads
+npm run tm orchestrate --instructions                          # Team lead instructions
+npm run tm -- team-reconcile <jobId> <phaseId> <worker> [tid]  # Reconcile completion
+npm run tm -- team-pending <name>                              # Pending tasks for teammate
 ```
 
-**Configuration** — team settings are stored in `taskmaster.json`:
+**Configuration** in `taskmaster.json`:
 
 | Field | Default | Description |
 |-------|---------|-------------|

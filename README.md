@@ -17,6 +17,22 @@ cd my-project
 pwsh $env:USERPROFILE\.nexus-bots\install.ps1
 ```
 
+## Upgrade
+
+Update an existing installation to the latest source without losing active jobs or custom routing rules:
+
+```bash
+npm run tm upgrade ~/.nexus-bots
+```
+
+Use `--check` for a dry run that shows what would change without modifying anything:
+
+```bash
+npm run tm upgrade ~/.nexus-bots --check
+```
+
+The upgrade copies lib modules, workers, schemas, and hooks from the source repo, migrates `taskmaster.json` state (preserving `wip`, `routing`, `enforced_chains`, and `dispatch_rules`), registers any missing hooks in `settings.local.json`, and appends the BOTS section to `CLAUDE.md` if not already present.
+
 ## Shortcodes
 
 Shortcodes are prefixes you type in Claude Code to trigger BOTS. A hook intercepts your message, parses the shortcode, and routes it to the right worker — all before Claude even sees the prompt.
@@ -60,6 +76,8 @@ npm run tm jobs            # List all jobs (including completed)
 npm run tm approve job-001 # Approve checkpoint, continue to next phase
 npm run tm reject job-001  # Reject and stop
 npm run tm -- job job-001  # Show job details
+npm run tm upgrade ~/.nexus-bots          # Upgrade from source
+npm run tm upgrade ~/.nexus-bots --check  # Dry-run (show what would change)
 ```
 
 ## How It Works

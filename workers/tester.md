@@ -1,6 +1,6 @@
 ---
 name: worker-tester
-description: Validation worker that tests coder output by running type checks, linting, and unit tests. Computes error hashes for STUMPED escalation.
+description: Validation worker that tests hacker output by running type checks, linting, and unit tests. Computes error hashes for STUMPED escalation.
 model: sonnet
 color: cyan
 ---
@@ -15,7 +15,7 @@ color: cyan
 
 ## Purpose
 
-Validation worker that tests $W.coder output by running type checks, linting, and unit tests. Produces structured test reports that feed the automated retry loop. Computes error hashes to detect repeated failures for STUMPED escalation.
+Validation worker that tests $W.code.hacker output by running type checks, linting, and unit tests. Produces structured test reports that feed the automated retry loop. Computes error hashes to detect repeated failures for STUMPED escalation.
 
 ## Constraints
 
@@ -37,7 +37,7 @@ Validation worker that tests $W.coder output by running type checks, linting, an
 
 **Test Sequence:**
 
-1. **Read coder handoff** → get files created/modified
+1. **Read hacker handoff** → get files created/modified
 2. **Type-check** changed files (if TypeScript/typed language)
 3. **Lint** changed files (if linter configured)
 4. **Run related tests** (detect from file paths)
@@ -58,7 +58,7 @@ normalize():
 
 ## Input
 
-Receives dispatch message with coder handoff and loop state:
+Receives dispatch message with hacker handoff and loop state:
 ```json
 {
   "dispatch": {
@@ -66,8 +66,8 @@ Receives dispatch message with coder handoff and loop state:
     "spawned_at": "2026-01-28T14:00:00Z",
     "task": {
       "task_id": "T035",
-      "description": "Validate coder output",
-      "coder_handoff": "W_coder_001.json",
+      "description": "Validate hacker output",
+      "coder_handoff": "W_hacker_001.json",
       "test_commands": {
         "type_check": "npm run type-check",
         "lint": "npm run lint",
@@ -101,13 +101,13 @@ Receives dispatch message with coder handoff and loop state:
     "completed_at": "2026-01-28T14:05:00Z",
 
     "coa": {
-      "chain": "$A0.#E0.@A0.T035.W_coder_001.W_tester_001",
-      "parent": "W_coder_001",
+      "chain": "$A0.#E0.@A0.T035.W_hacker_001.W_tester_001",
+      "parent": "W_hacker_001",
       "root_task": "T035",
       "depth": 2,
       "lineage": [
         { "tid": "ambassador_s10_001", "role": "TERMINAL", "action": "dispatch" },
-        { "tid": "W_coder_001", "role": "WORKER", "action": "implement" },
+        { "tid": "W_hacker_001", "role": "WORKER", "action": "implement" },
         { "tid": "W_tester_001", "role": "WORKER", "action": "validate" }
       ]
     },
@@ -161,8 +161,8 @@ Receives dispatch message with coder handoff and loop state:
     "completed_at": "2026-01-28T14:05:00Z",
 
     "coa": {
-      "chain": "$A0.#E0.@A0.T035.W_coder_001.W_tester_001",
-      "parent": "W_coder_001",
+      "chain": "$A0.#E0.@A0.T035.W_hacker_001.W_tester_001",
+      "parent": "W_hacker_001",
       "root_task": "T035",
       "depth": 2,
       "lineage": [...]
@@ -221,7 +221,7 @@ Receives dispatch message with coder handoff and loop state:
 
     "next_action": {
       "action": "retry",
-      "spawn": "$W.coder",
+      "spawn": "$W.code.hacker",
       "with_context": {
         "previous_errors": [...],
         "failure_context": {...}

@@ -69,9 +69,9 @@ Receives dispatch with full error history and COA/COI context:
     "context": {
       "parent_coa": "$A0.#E0.@A0.T035",
       "error_history": [
-        { "attempt": 1, "hash": "a1b2c3d4", "errors": [...], "coder_tid": "W_coder_001" },
-        { "attempt": 2, "hash": "a1b2c3d4", "errors": [...], "coder_tid": "W_coder_002" },
-        { "attempt": 3, "hash": "a1b2c3d4", "errors": [...], "coder_tid": "W_coder_003" }
+        { "attempt": 1, "hash": "a1b2c3d4", "errors": [...], "hacker_tid": "W_hacker_001" },
+        { "attempt": 2, "hash": "a1b2c3d4", "errors": [...], "hacker_tid": "W_hacker_002" },
+        { "attempt": 3, "hash": "a1b2c3d4", "errors": [...], "hacker_tid": "W_hacker_003" }
       ],
       "coa_lineage": [...],
       "coi_summary": {
@@ -95,7 +95,7 @@ Receives dispatch with full error history and COA/COI context:
 ╠═══════════════════════════════════════════════════════════════════╣
 │                                                                   │
 │  Task: Add logout button to header component                      │
-│  COA: $A0.#E0.@A0.T035.W_coder_003.W_tester_003                  │
+│  COA: $A0.#E0.@A0.T035.W_hacker_003.W_tester_003                  │
 │  Attempts: 3 (same error)                                         │
 │  Status: Needs human insight                                      │
 │                                                                   │
@@ -104,9 +104,9 @@ Receives dispatch with full error history and COA/COI context:
 ├───────────┬────────────────┬──────────────────────────────────────┤
 │  Attempt  │  Worker        │  Result                              │
 ├───────────┼────────────────┼──────────────────────────────────────┤
-│  1        │  W_coder_001   │  type error line 42                  │
-│  2        │  W_coder_002   │  type error line 42                  │
-│  3        │  W_coder_003   │  type error line 42                  │
+│  1        │  W_hacker_001   │  type error line 42                  │
+│  2        │  W_hacker_002   │  type error line 42                  │
+│  3        │  W_hacker_003   │  type error line 42                  │
 └───────────┴────────────────┴──────────────────────────────────────┘
 
 ┌───────────────────────────────────────────────────────────────────┐
@@ -148,7 +148,7 @@ Receives dispatch with full error history and COA/COI context:
 ╠═══════════════════════════════════════════════════════════════════╣
 │                                                                   │
 │  Task: Add logout button to header component                      │
-│  COA: $A0.#E0.@A0.T035.W_coder_010.W_tester_010                  │
+│  COA: $A0.#E0.@A0.T035.W_hacker_010.W_tester_010                  │
 │  Attempts: 10 (exhausted)                                         │
 │  Status: BLOCKED — Human intervention required                    │
 │                                                                   │

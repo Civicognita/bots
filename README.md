@@ -91,12 +91,11 @@ Approve → merge to main, cleanup
 
 ## Worker Catalog
 
-### Root Workers (8)
+### Root Workers (7)
 
 | Worker | Role |
 |--------|------|
 | analyst | Pattern recognition, research |
-| coder | General implementation |
 | reporter | Diagnostic reports |
 | researcher | Information gathering |
 | reviewer | Code review, quality |

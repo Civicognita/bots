@@ -17,26 +17,38 @@ cd my-project
 pwsh $env:USERPROFILE\.nexus-bots\install.ps1
 ```
 
-## Usage
+## Shortcodes
 
-In Claude Code, type:
+Shortcodes are prefixes you type in Claude Code to trigger BOTS. A hook intercepts your message, parses the shortcode, and routes it to the right worker — all before Claude even sees the prompt.
 
+| Shortcode | Name | What it does |
+|-----------|------|--------------|
+| `w:>` | **Work** | Queue a task for background execution. BOTS creates an isolated worktree, picks the right worker, and runs the job in parallel while you keep working. |
+| `n:>` | **Next** | Set a topic to work on after the current task completes. Think of it as bookmarking your next focus area. |
+
+### Examples
+
+**Queue a single job:**
 ```
 w:> Add a logout button to the dashboard header
 ```
 
 BOTS automatically:
-1. Parses the shortcode
-2. Routes to the right worker type (code.engineer for this example)
-3. Creates a WORK{JOB} with isolated worktree
-4. Spawns background workers
-5. Presents checkpoints for your review
+1. Parses the shortcode and extracts the task description
+2. Routes to the right worker type based on keywords (e.g., "Add button" routes to `code.engineer`)
+3. Creates a WORK{JOB} with its own isolated git worktree
+4. Spawns background workers to execute the job
+5. Pauses at checkpoints for your review before merging
 
-### Multiple jobs
-
+**Queue multiple jobs at once** — each `w:>` becomes a separate parallel job:
 ```
 w:> Fix the login bug in auth.ts
 w:> Add dark mode toggle to settings
+```
+
+**Set what to work on next** — `n:>` doesn't execute immediately, it queues a topic:
+```
+w:> Fix the login bug in auth.ts
 n:> Review the API rate limiting proposal
 ```
 

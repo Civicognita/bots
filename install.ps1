@@ -205,39 +205,45 @@ if (Test-Path $settingsFile) {
 # Step 9: Update CLAUDE.md
 Info "Updating CLAUDE.md..."
 $claudeMd = "$ProjectRoot/CLAUDE.md"
-$botsTemplate = Get-Content "$BotsSrc/templates/TASKMASTER.md" -Raw
+$botsTemplatePath = "$BotsSrc/templates/TASKMASTER.md"
 if (Test-Path $claudeMd) {
     $content = Get-Content $claudeMd -Raw
     if ($content -match "BOTS.*Bolt-On Taskmaster") {
-        # Replace existing BOTS section with latest template
-        $botsStart = $content.IndexOf(($content | Select-String -Pattern "(?m)^#+\s+BOTS\b").Matches[0].Value)
-        if ($botsStart -ge 0) {
-            # Find the heading level of the BOTS section
-            $botsHeading = ($content.Substring($botsStart) | Select-String -Pattern "^(#+)").Matches[0].Groups[1].Value
-            $level = $botsHeading.Length
-            # Find next same-or-higher-level heading after BOTS
-            $afterBots = $content.Substring($botsStart + 1)
-            $nextHeading = $afterBots | Select-String -Pattern "(?m)^#{1,$level}\s+(?!BOTS\b)"
-            if ($nextHeading) {
-                $botsEnd = $botsStart + 1 + $nextHeading.Matches[0].Index
-                $before = $content.Substring(0, $botsStart)
-                $after = $content.Substring($botsEnd)
-                Set-Content $claudeMd ($before + $botsTemplate.TrimEnd() + "`n" + $after) -NoNewline
-            } else {
-                $before = $content.Substring(0, $botsStart)
-                Set-Content $claudeMd ($before + $botsTemplate.TrimEnd() + "`n") -NoNewline
-            }
+        # Replace existing BOTS section with latest template via temp node script
+        $updateScript = "$ProjectRoot/.bots/_update_claude_md.cjs"
+        @'
+const fs = require('fs');
+const [claudePath, templatePath] = process.argv.slice(2);
+const content = fs.readFileSync(claudePath, 'utf-8');
+const template = fs.readFileSync(templatePath, 'utf-8');
+const botsMatch = content.match(/^(#+)\s+BOTS\b/m);
+if (!botsMatch) { process.exit(1); }
+const botsStart = content.indexOf(botsMatch[0]);
+const level = botsMatch[1].length;
+const rest = content.substring(botsStart + botsMatch[0].length);
+const nextHeadingRe = new RegExp("^#{1," + level + "}\\s+(?!BOTS\\b)", "m");
+const nextMatch = rest.match(nextHeadingRe);
+const botsEnd = nextMatch ? botsStart + botsMatch[0].length + nextMatch.index : content.length;
+const before = content.substring(0, botsStart);
+const after = content.substring(botsEnd);
+fs.writeFileSync(claudePath, before + template.trimEnd() + '\n' + after);
+'@ | Set-Content $updateScript
+        try {
+            node $updateScript $claudeMd $botsTemplatePath
             Ok "  Updated BOTS section in CLAUDE.md"
-        } else {
+        } catch {
+            $botsTemplate = Get-Content $botsTemplatePath -Raw
             Add-Content $claudeMd "`n$botsTemplate"
-            Ok "  Appended BOTS section (could not find section start)"
+            Ok "  Appended BOTS section (replacement failed, appended instead)"
         }
+        Remove-Item $updateScript -ErrorAction SilentlyContinue
     } else {
+        $botsTemplate = Get-Content $botsTemplatePath -Raw
         Add-Content $claudeMd "`n$botsTemplate"
         Ok "  Appended BOTS section"
     }
 } else {
-    Set-Content $claudeMd $botsTemplate
+    Copy-Item $botsTemplatePath $claudeMd
     Ok "  Created CLAUDE.md with BOTS section"
 }
 

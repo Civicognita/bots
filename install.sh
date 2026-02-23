@@ -290,33 +290,37 @@ fi
 
 info "Updating CLAUDE.md..."
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
-CLAUDE_MD_NODE="$PROJECT_ROOT_NODE/CLAUDE.md"
 BOTS_TEMPLATE="$BOTS_SRC/templates/TASKMASTER.md"
-BOTS_TEMPLATE_NODE="$BOTS_SRC_NODE/templates/TASKMASTER.md"
 if [ -f "$CLAUDE_MD" ]; then
   if grep -q "BOTS.*Bolt-On Taskmaster" "$CLAUDE_MD" 2>/dev/null; then
-    # Replace existing BOTS section with latest template
-    node -e "
-      const fs = require('fs');
-      const content = fs.readFileSync('$CLAUDE_MD_NODE', 'utf-8');
-      const template = fs.readFileSync('$BOTS_TEMPLATE_NODE', 'utf-8');
-      const botsMatch = content.match(/^(#+)\s+BOTS\b/m);
-      if (!botsMatch) { process.exit(1); }
-      const botsStart = content.indexOf(botsMatch[0]);
-      const level = botsMatch[1].length;
-      const rest = content.substring(botsStart + botsMatch[0].length);
-      const nextMatch = rest.match(new RegExp('^#{1,' + level + '}\\\\s+(?!BOTS\\\\b)', 'm'));
-      const botsEnd = nextMatch ? botsStart + botsMatch[0].length + nextMatch.index : content.length;
-      const before = content.substring(0, botsStart);
-      const after = content.substring(botsEnd);
-      fs.writeFileSync('$CLAUDE_MD_NODE', before + template.trim() + '\\n' + after);
-      console.log('  Updated BOTS section in CLAUDE.md');
-    " || {
-      # Fallback: just append if replacement failed
+    # Replace existing BOTS section with latest template.
+    # Write a temp script to avoid bash/node escaping hell.
+    BOTS_UPDATE_SCRIPT="$PROJECT_ROOT/.bots/_update_claude_md.cjs"
+    cat > "$BOTS_UPDATE_SCRIPT" << 'UPDATE_SCRIPT_EOF'
+const fs = require('fs');
+const [claudePath, templatePath] = process.argv.slice(2);
+const content = fs.readFileSync(claudePath, 'utf-8');
+const template = fs.readFileSync(templatePath, 'utf-8');
+const botsMatch = content.match(/^(#+)\s+BOTS\b/m);
+if (!botsMatch) { process.exit(1); }
+const botsStart = content.indexOf(botsMatch[0]);
+const level = botsMatch[1].length;
+const rest = content.substring(botsStart + botsMatch[0].length);
+const nextHeadingRe = new RegExp("^#{1," + level + "}\\s+(?!BOTS\\b)", "m");
+const nextMatch = rest.match(nextHeadingRe);
+const botsEnd = nextMatch ? botsStart + botsMatch[0].length + nextMatch.index : content.length;
+const before = content.substring(0, botsStart);
+const after = content.substring(botsEnd);
+fs.writeFileSync(claudePath, before + template.trimEnd() + '\n' + after);
+UPDATE_SCRIPT_EOF
+    node "$BOTS_UPDATE_SCRIPT" "$CLAUDE_MD" "$BOTS_TEMPLATE" && {
+      ok "  Updated BOTS section in CLAUDE.md"
+    } || {
       echo "" >> "$CLAUDE_MD"
       cat "$BOTS_TEMPLATE" >> "$CLAUDE_MD"
       ok "  Appended BOTS section to CLAUDE.md (replacement failed, appended instead)"
     }
+    rm -f "$BOTS_UPDATE_SCRIPT"
   else
     echo "" >> "$CLAUDE_MD"
     cat "$BOTS_TEMPLATE" >> "$CLAUDE_MD"

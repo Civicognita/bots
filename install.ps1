@@ -28,6 +28,7 @@ Info "Creating directories..."
 $dirs = @(
     ".bots/lib", ".bots/lib/integrations", ".bots/state", ".bots/schemas",
     ".ai/handoff", ".ai/checkpoints",
+    ".ai/bots/reports", ".ai/bots/docs",
     ".claude/agents/workers/code", ".claude/agents/workers/k",
     ".claude/agents/workers/ux", ".claude/agents/workers/strat",
     ".claude/agents/workers/comm", ".claude/agents/workers/ops",
@@ -202,26 +203,31 @@ if (Test-Path $settingsFile) {
     Ok "  Created settings.local.json with hooks"
 }
 
-# Step 9: Update CLAUDE.md
+# Step 9: Install AGENTS.md
+Info "Installing AGENTS.md..."
+Copy-Item "$BotsSrc/templates/AGENTS.md" "$ProjectRoot/.bots/AGENTS.md" -Force
+Ok "  Copied AGENTS.md to .bots/"
+
+# Step 10: Update CLAUDE.md
 Info "Updating CLAUDE.md..."
 $claudeMd = "$ProjectRoot/CLAUDE.md"
 $botsTemplatePath = "$BotsSrc/templates/TASKMASTER.md"
 if (Test-Path $claudeMd) {
     $content = Get-Content $claudeMd -Raw
-    if ($content -match "BOTS.*Bolt-On Taskmaster") {
-        # Replace existing BOTS section with latest template via temp node script
+    if (($content -match "BOTS.*Bolt-On Taskmaster") -or ($content -match "(?m)^#+\s+TASKMASTER\b")) {
+        # Replace existing BOTS/TASKMASTER section with latest template via temp node script
         $updateScript = "$ProjectRoot/.bots/_update_claude_md.cjs"
         @'
 const fs = require('fs');
 const [claudePath, templatePath] = process.argv.slice(2);
 const content = fs.readFileSync(claudePath, 'utf-8');
 const template = fs.readFileSync(templatePath, 'utf-8');
-const botsMatch = content.match(/^(#+)\s+BOTS\b/m);
+const botsMatch = content.match(/^(#+)\s+(BOTS|TASKMASTER)\b/m);
 if (!botsMatch) { process.exit(1); }
 const botsStart = content.indexOf(botsMatch[0]);
 const level = botsMatch[1].length;
 const rest = content.substring(botsStart + botsMatch[0].length);
-const nextHeadingRe = new RegExp("^#{1," + level + "}\\s+(?!BOTS\\b)", "m");
+const nextHeadingRe = new RegExp("^#{1," + level + "}\\s+(?!(?:BOTS|TASKMASTER)\\b)", "m");
 const nextMatch = rest.match(nextHeadingRe);
 const botsEnd = nextMatch ? botsStart + botsMatch[0].length + nextMatch.index : content.length;
 const before = content.substring(0, botsStart);
@@ -247,10 +253,10 @@ fs.writeFileSync(claudePath, before + template.trimEnd() + '\n' + after);
     Ok "  Created CLAUDE.md with BOTS section"
 }
 
-# Step 10: Update .gitignore
+# Step 11: Update .gitignore
 Info "Updating .gitignore..."
 $gitignore = "$ProjectRoot/.gitignore"
-$entries = @(".bots/state/", ".ai/handoff/", ".ai/checkpoints/", ".worktrees/")
+$entries = @(".bots/state/", ".ai/handoff/", ".ai/checkpoints/", ".ai/bots/", ".worktrees/")
 if (Test-Path $gitignore) {
     $content = Get-Content $gitignore -Raw
     $added = 0

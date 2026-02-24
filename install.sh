@@ -56,6 +56,8 @@ mkdir -p "$PROJECT_ROOT/.bots/state"
 mkdir -p "$PROJECT_ROOT/.bots/schemas"
 mkdir -p "$PROJECT_ROOT/.ai/handoff"
 mkdir -p "$PROJECT_ROOT/.ai/checkpoints"
+mkdir -p "$PROJECT_ROOT/.ai/bots/reports"
+mkdir -p "$PROJECT_ROOT/.ai/bots/docs"
 mkdir -p "$PROJECT_ROOT/.claude/agents/workers/code"
 mkdir -p "$PROJECT_ROOT/.claude/agents/workers/k"
 mkdir -p "$PROJECT_ROOT/.claude/agents/workers/ux"
@@ -285,15 +287,23 @@ SETTINGS_EOF
 fi
 
 # ============================================================================
-# Step 9: Append BOTS section to CLAUDE.md
+# Step 9: Install AGENTS.md
+# ============================================================================
+
+info "Installing AGENTS.md..."
+cp "$BOTS_SRC/templates/AGENTS.md" "$PROJECT_ROOT/.bots/AGENTS.md"
+ok "  Copied AGENTS.md to .bots/"
+
+# ============================================================================
+# Step 10: Append BOTS section to CLAUDE.md
 # ============================================================================
 
 info "Updating CLAUDE.md..."
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
 BOTS_TEMPLATE="$BOTS_SRC/templates/TASKMASTER.md"
 if [ -f "$CLAUDE_MD" ]; then
-  if grep -q "BOTS.*Bolt-On Taskmaster" "$CLAUDE_MD" 2>/dev/null; then
-    # Replace existing BOTS section with latest template.
+  if grep -qE "(BOTS.*Bolt-On Taskmaster|^#+\s+TASKMASTER\b)" "$CLAUDE_MD" 2>/dev/null; then
+    # Replace existing BOTS/TASKMASTER section with latest template.
     # Write a temp script to avoid bash/node escaping hell.
     BOTS_UPDATE_SCRIPT="$PROJECT_ROOT/.bots/_update_claude_md.cjs"
     cat > "$BOTS_UPDATE_SCRIPT" << 'UPDATE_SCRIPT_EOF'
@@ -301,12 +311,12 @@ const fs = require('fs');
 const [claudePath, templatePath] = process.argv.slice(2);
 const content = fs.readFileSync(claudePath, 'utf-8');
 const template = fs.readFileSync(templatePath, 'utf-8');
-const botsMatch = content.match(/^(#+)\s+BOTS\b/m);
+const botsMatch = content.match(/^(#+)\s+(BOTS|TASKMASTER)\b/m);
 if (!botsMatch) { process.exit(1); }
 const botsStart = content.indexOf(botsMatch[0]);
 const level = botsMatch[1].length;
 const rest = content.substring(botsStart + botsMatch[0].length);
-const nextHeadingRe = new RegExp("^#{1," + level + "}\\s+(?!BOTS\\b)", "m");
+const nextHeadingRe = new RegExp("^#{1," + level + "}\\s+(?!(?:BOTS|TASKMASTER)\\b)", "m");
 const nextMatch = rest.match(nextHeadingRe);
 const botsEnd = nextMatch ? botsStart + botsMatch[0].length + nextMatch.index : content.length;
 const before = content.substring(0, botsStart);
@@ -332,14 +342,14 @@ else
 fi
 
 # ============================================================================
-# Step 10: Update .gitignore
+# Step 11: Update .gitignore
 # ============================================================================
 
 info "Updating .gitignore..."
 GITIGNORE="$PROJECT_ROOT/.gitignore"
 ENTRIES_ADDED=0
 if [ -f "$GITIGNORE" ]; then
-  for entry in ".bots/state/" ".ai/handoff/" ".ai/checkpoints/" ".worktrees/"; do
+  for entry in ".bots/state/" ".ai/handoff/" ".ai/checkpoints/" ".ai/bots/" ".worktrees/"; do
     if ! grep -qF "$entry" "$GITIGNORE" 2>/dev/null; then
       echo "$entry" >> "$GITIGNORE"
       ENTRIES_ADDED=$((ENTRIES_ADDED + 1))
@@ -351,9 +361,10 @@ else
 .bots/state/
 .ai/handoff/
 .ai/checkpoints/
+.ai/bots/
 .worktrees/
 GITIGNORE_EOF
-  ENTRIES_ADDED=4
+  ENTRIES_ADDED=5
 fi
 
 if [ $ENTRIES_ADDED -gt 0 ]; then

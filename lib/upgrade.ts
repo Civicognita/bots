@@ -62,7 +62,7 @@ function validateSource(sourcePath: string): string[] {
     errors.push(`Source path does not exist: ${sourcePath}`);
     return errors;
   }
-  for (const required of ['lib', 'workers', 'templates/taskmaster.json']) {
+  for (const required of ['lib', 'workers', 'templates/taskmaster.json', 'templates/AGENTS.md']) {
     const full = path.join(sourcePath, required);
     if (!fs.existsSync(full)) {
       errors.push(`Missing expected source path: ${required}`);
@@ -192,13 +192,13 @@ function updateClaudeMd(projectRoot: string, sourcePath: string, check: boolean)
   if (fs.existsSync(claudeMd)) {
     const content = fs.readFileSync(claudeMd, 'utf-8');
     const template = fs.readFileSync(templatePath, 'utf-8');
-    if (content.includes('BOTS') && content.includes('Bolt-On Taskmaster')) {
-      // Replace existing BOTS section with latest template
-      const botsMatch = content.match(/^(#+)\s+BOTS\b/m);
+    if ((content.includes('BOTS') && content.includes('Bolt-On Taskmaster')) || content.match(/^#+\s+TASKMASTER\b/m)) {
+      // Replace existing BOTS/TASKMASTER section with latest template
+      const botsMatch = content.match(/^(#+)\s+(BOTS|TASKMASTER)\b/m);
       if (botsMatch) {
         const botsStart = content.indexOf(botsMatch[0]);
         const level = botsMatch[1].length;
-        const pattern = new RegExp(`^#{1,${level}}\\s+(?!BOTS\\b)`, 'm');
+        const pattern = new RegExp(`^#{1,${level}}\\s+(?!(?:BOTS|TASKMASTER)\\b)`, 'm');
         const afterBots = content.substring(botsStart + 1).search(pattern);
         const botsEnd = afterBots === -1 ? content.length : botsStart + 1 + afterBots;
         if (!check) {
@@ -355,6 +355,23 @@ export function upgrade(sourcePath: string, check: boolean = false): UpgradeResu
   } else {
     result.counts.hooks = copyDir(hooksSrc, hooksDest, '.sh');
     result.actions.push(`Copied ${result.counts.hooks} hook scripts`);
+  }
+
+  // --- Copy AGENTS.md ---
+  const agentsSrc = path.join(resolvedSource, 'templates', 'AGENTS.md');
+  const agentsDest = path.join(projectRoot, '.bots', 'AGENTS.md');
+  if (fs.existsSync(agentsSrc)) {
+    if (!check) { fs.copyFileSync(agentsSrc, agentsDest); }
+    result.actions.push(`${check ? 'Would copy' : 'Copied'} AGENTS.md to .bots/`);
+  }
+
+  // --- Ensure output directories ---
+  for (const dir of ['.ai/bots/reports', '.ai/bots/docs']) {
+    const full = path.join(projectRoot, dir);
+    if (!fs.existsSync(full)) {
+      if (!check) { fs.mkdirSync(full, { recursive: true }); }
+      result.actions.push(`${check ? 'Would create' : 'Created'} ${dir}/`);
+    }
   }
 
   // --- Migrate state ---

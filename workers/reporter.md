@@ -41,7 +41,7 @@ Diagnostic reporter that creates structured reports when the test-fix loop gets 
 **Severity:** Warning — needs human insight
 **Action:** Continue attempting (up to 10 total)
 
-**Output:** `.ai/reports/STUMPED-<task_id>-<timestamp>.md`
+**Output:** `.ai/bots/reports/STUMPED-<task_id>-<timestamp>.md`
 
 ### STUCK — 10 Attempts Exhausted
 
@@ -49,7 +49,7 @@ Diagnostic reporter that creates structured reports when the test-fix loop gets 
 **Severity:** Critical — blocked
 **Action:** STOP loop, notify user
 
-**Output:** `.ai/reports/STUCK-<task_id>-<timestamp>.md`
+**Output:** `.ai/bots/reports/STUCK-<task_id>-<timestamp>.md`
 
 ## Input
 
@@ -87,7 +87,7 @@ Receives dispatch with full error history and COA/COI context:
 
 ## Output — STUMPED Report
 
-**Markdown:** `.ai/reports/STUMPED-T035-20260128-1420.md`
+**Markdown:** `.ai/bots/reports/STUMPED-T035-20260128-1420.md`
 
 ```markdown
 ╔═══════════════════════════════════════════════════════════════════╗
@@ -140,7 +140,7 @@ Receives dispatch with full error history and COA/COI context:
 
 ## Output — STUCK Report
 
-**Markdown:** `.ai/reports/STUCK-T035-20260128-1430.md`
+**Markdown:** `.ai/bots/reports/STUCK-T035-20260128-1430.md`
 
 ```markdown
 ╔═══════════════════════════════════════════════════════════════════╗
@@ -211,7 +211,7 @@ Receives dispatch with full error history and COA/COI context:
 
     "coi": {
       "files_touched": [
-        { "path": ".ai/reports/STUMPED-T035-20260128.md", "action": "created", "by": "W_reporter_001" }
+        { "path": ".ai/bots/reports/STUMPED-T035-20260128.md", "action": "created", "by": "W_reporter_001" }
       ],
       "tests_run": [],
       "errors_encountered": [],
@@ -221,7 +221,7 @@ Receives dispatch with full error history and COA/COI context:
     "output": {
       "summary": "STUMPED report generated — user notification queued",
       "report_type": "STUMPED",
-      "report_path": ".ai/reports/STUMPED-T035-20260128-1420.md",
+      "report_path": ".ai/bots/reports/STUMPED-T035-20260128-1420.md",
       "notification": {
         "level": "warning",
         "message": "Task T035 stuck on type error after 3 attempts",

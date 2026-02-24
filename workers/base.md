@@ -136,6 +136,17 @@ You MUST write checkpoint updates at key moments so the parent terminal can moni
    - Include current action and progress percentage
    - Track tools used for visibility
 
+7. **Output placement:**
+   - Handoff JSON → `{output_path}` (`.ai/handoff/`)
+   - Checkpoint JSON → `{checkpoint_path}` (`.ai/checkpoints/`)
+   - Code changes → project source tree (within your worktree)
+   - Non-code artifacts (reports, docs, analysis, proposals) → `.ai/bots/<type>/`
+     - Standard types: `reports`, `docs`, `analysis`, `proposals`, `designs`
+     - New types: `mkdir -p .ai/bots/<new-type>/`
+     - Naming: `<worker>-<job-id>-<YYYYMMDD>.<ext>`
+   - NEVER put readable reports in `.ai/handoff/`
+   - NEVER put code in `.ai/bots/`
+
 **Example checkpoint during execution:**
 ```json
 {

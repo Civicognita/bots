@@ -16,7 +16,7 @@ color: cyan
 
 ## Purpose
 
-Packs and unpacks 0R (Zero-R) format — the compressed knowledge representation used in NEXUS. Handles serialization, compression, and integrity verification of structured knowledge.
+Packs and unpacks 0R (Zero-R) format — a compressed knowledge representation. Handles serialization, compression, and integrity verification of structured knowledge.
 
 ## Constraints
 

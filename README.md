@@ -5,16 +5,16 @@ Worker team orchestration for [Claude Code](https://docs.anthropic.com/en/docs/c
 ## Install
 
 ```bash
-git clone git@github.com:Civicognita/nexus-bots.git ~/.nexus-bots
+git clone git@github.com:Civicognita/bots.git ~/.bots
 cd my-project
-bash ~/.nexus-bots/install.sh
+bash ~/.bots/install.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-git clone git@github.com:Civicognita/nexus-bots.git $env:USERPROFILE\.nexus-bots
+git clone git@github.com:Civicognita/bots.git $env:USERPROFILE\.bots
 cd my-project
-pwsh $env:USERPROFILE\.nexus-bots\install.ps1
+pwsh $env:USERPROFILE\.bots\install.ps1
 ```
 
 ## Upgrade
@@ -22,13 +22,13 @@ pwsh $env:USERPROFILE\.nexus-bots\install.ps1
 Update an existing installation to the latest source without losing active jobs or custom routing rules:
 
 ```bash
-npm run tm upgrade ~/.nexus-bots
+npm run tm upgrade ~/.bots
 ```
 
 Use `--check` for a dry run that shows what would change without modifying anything:
 
 ```bash
-npm run tm upgrade ~/.nexus-bots --check
+npm run tm upgrade ~/.bots --check
 ```
 
 The upgrade copies lib modules, workers, schemas, and hooks from the source repo, migrates `taskmaster.json` state (preserving `wip`, `routing`, `enforced_chains`, and `dispatch_rules`), registers any missing hooks in `settings.local.json`, and appends the BOTS section to `CLAUDE.md` if not already present.
@@ -81,8 +81,8 @@ npm run tm monitor             # Check worker completion status
 npm run tm mode                # Show current execution mode
 npm run tm team-status         # Show team mode status
 npm run tm detect              # Show detected integration
-npm run tm upgrade ~/.nexus-bots          # Upgrade from source
-npm run tm upgrade ~/.nexus-bots --check  # Dry-run (show what would change)
+npm run tm upgrade ~/.bots          # Upgrade from source
+npm run tm upgrade ~/.bots --check  # Dry-run (show what would change)
 ```
 
 ## How It Works
@@ -218,9 +218,8 @@ BOTS auto-detects your project environment and activates the right integration a
 
 | Priority | Integration | Detection Signal | What it does |
 |----------|-------------|------------------|--------------|
-| 1 | **Nexus** | `.nexus/core/GOSPEL.md` + `.ai/.nexus/` dir | Tynn sync + COA tracking, BAIF state gating, `.ai/.nexus/` paths |
-| 2 | **Tynn** | `"tynn"` in `.claude/settings.local.json` MCP config | Syncs job status to Tynn tasks, parses `#T123`/`@task:ULID` references |
-| 3 | **NoOp** | Neither detected | Standalone mode, no PM sync |
+| 1 | **Tynn** | `"tynn"` in `.claude/settings.local.json` or `.mcp.json` MCP config | Syncs job status to Tynn tasks, parses `#T123`/`@task:ULID` references |
+| 2 | **NoOp** | Not detected | Standalone mode, no PM sync |
 
 Check which integration is active:
 ```bash
@@ -237,13 +236,6 @@ When Tynn MCP is detected, BOTS automatically:
   - `complete` -> `mcp__tynn__finished`
   - `failed` -> `mcp__tynn__block`
 - Posts phase completion comments to bound Tynn tasks
-
-### Nexus Integration
-
-Extends Tynn with Nexus-specific features:
-- **Path override** — State files at `.ai/.nexus/` instead of `.bots/state/`
-- **COA chain tracking** — Worker COA extension metadata on bindings
-- **BAIF state gating** — Remote sync operations skipped when STATE != ONLINE
 
 ### Manual Override
 

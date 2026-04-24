@@ -2,7 +2,7 @@
 # BOTS Installer — Bolt-On Taskmaster System
 #
 # Usage:
-#   bash /path/to/nexus-bots/install.sh
+#   bash /path/to/bots/install.sh
 #
 # Run from your project root. Installs BOTS into the current directory.
 

@@ -136,7 +136,6 @@ export {
 
 // Integration implementations
 export { TynnIntegration } from './integrations/tynn.js';
-export { NexusIntegration } from './integrations/nexus.js';
 export {
   detectIntegration,
   autoDetectAndSet,

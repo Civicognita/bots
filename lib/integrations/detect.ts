@@ -2,9 +2,8 @@
  * BOTS Integration Auto-Detection
  *
  * Probes the project environment and returns the appropriate integration:
- *   1. Nexus — .nexus/core/GOSPEL.md exists AND .ai/.nexus/ directory exists
- *   2. Tynn  — .claude/settings.local.json has "tynn" in mcpServers
- *   3. NoOp  — Neither detected (standalone mode)
+ *   1. Tynn — .claude/settings.local.json or .mcp.json has "tynn" in mcpServers
+ *   2. NoOp — Not detected (standalone mode)
  *
  * Also provides getStatePath() for path resolution based on active integration.
  */
@@ -13,21 +12,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ProjectIntegration, getIntegration, setIntegration } from '../project-integration.js';
 import { TynnIntegration } from './tynn.js';
-import { NexusIntegration } from './nexus.js';
 
 // ============================================================================
 // Detection
 // ============================================================================
-
-/**
- * Check if the current project is a Nexus repository.
- * Detects PRIME core at .nexus/core/GOSPEL.md — the authoritative signal.
- * (.ai/.nexus/ is runtime session state, may not exist on fresh clone.)
- */
-function isNexusProject(cwd: string): boolean {
-  const gospelPath = path.join(cwd, '.nexus', 'core', 'GOSPEL.md');
-  return fs.existsSync(gospelPath);
-}
 
 /**
  * Check if the project has Tynn MCP configured.
@@ -73,28 +61,20 @@ function hasTynnMcp(cwd: string): boolean {
   }
 }
 
-export type DetectedIntegration = 'nexus' | 'tynn' | 'noop';
+export type DetectedIntegration = 'tynn' | 'noop';
 
 /**
  * Detect which integration to use based on project environment.
  *
- * Priority: Nexus > Tynn > NoOp
- *   - Nexus includes Tynn, so it takes priority when both signals present
+ * Priority: Tynn > NoOp
  */
 export function detectIntegration(cwd?: string): { type: DetectedIntegration; integration: ProjectIntegration } {
   const dir = cwd || process.cwd();
 
-  // Priority 1: Nexus (has PRIME core + .ai/.nexus/)
-  if (isNexusProject(dir)) {
-    return { type: 'nexus', integration: new NexusIntegration() };
-  }
-
-  // Priority 2: Tynn MCP (has tynn in settings)
   if (hasTynnMcp(dir)) {
     return { type: 'tynn', integration: new TynnIntegration() };
   }
 
-  // Default: standalone (keep existing NoOp)
   return { type: 'noop', integration: getIntegration() };
 }
 
@@ -116,14 +96,8 @@ export function autoDetectAndSet(cwd?: string): DetectedIntegration {
 
 /**
  * Resolve a state file path based on the active integration.
- *
- * - NexusIntegration: .ai/.nexus/<filename>
- * - Default:          .bots/state/<filename>
+ * Default: .bots/state/<filename>
  */
 export function getStatePath(filename: string): string {
-  const integration = getIntegration();
-  if (integration instanceof NexusIntegration) {
-    return integration.getStatePath(filename);
-  }
   return path.join(process.cwd(), '.bots', 'state', filename);
 }

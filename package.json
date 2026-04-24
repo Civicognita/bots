@@ -1,5 +1,5 @@
 {
-  "name": "nexus-bots",
+  "name": "bots",
   "version": "1.0.0",
   "description": "BOTS — Bolt-On Taskmaster System for Claude Code",
   "type": "module",
@@ -18,6 +18,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Civicognita/nexus-bots.git"
+    "url": "git@github.com:Civicognita/bots.git"
   }
 }

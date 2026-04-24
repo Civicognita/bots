@@ -657,7 +657,7 @@ COMMANDS:
   monitor             Check job/worker status
   complete <id>       Complete job (merge + cleanup)
   archive <id>        Archive job handoffs
-  detect              Show detected integration (nexus/tynn/noop)
+  detect              Show detected integration (tynn/noop)
   mode [subagent|team] Get or set execution mode
   team-reconcile      Update BOTS state on team task completion
   team-pending        Check pending tasks for a teammate

@@ -1,7 +1,7 @@
 # BOTS Installer - Bolt-On Taskmaster System (PowerShell)
 #
 # Usage:
-#   pwsh /path/to/nexus-bots/install.ps1
+#   pwsh /path/to/bots/install.ps1
 #
 # Run from your project root. Installs BOTS into the current directory.
 

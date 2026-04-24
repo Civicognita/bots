@@ -145,4 +145,4 @@ lexicon/
 | PascalCase | WorkJob | Classes, components |
 | camelCase | workJob | Variables, functions |
 | kebab-case | work-job | Files, URLs |
-| SCREAMING{BRACES} | WORK{JOB} | NEXUS entities |
+| SCREAMING{BRACES} | WORK{JOB} | BOTS job entities |

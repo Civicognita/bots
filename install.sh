@@ -2,11 +2,32 @@
 # BOTS Installer — Bolt-On Taskmaster System
 #
 # Usage:
-#   bash /path/to/bots/install.sh
+#   bash /path/to/bots/install.sh [--with-tynn]
+#
+# Flags:
+#   --with-tynn   Also scaffold tynn-lite — the iterative-work / loop-prompt
+#                 / checkpoint / pending-questions agent harness used by the
+#                 Aionima ($A0) project. Lays out _plans/_next/ and
+#                 _discovery/learnings/ + drops the canonical tynn-lite.md
+#                 + appends a tynn-lite section to the project's CLAUDE.md.
+#                 Idempotent: re-running refreshes docs but preserves state.
 #
 # Run from your project root. Installs BOTS into the current directory.
 
 set -e
+
+# ---------- Flag parsing ----------
+WITH_TYNN=0
+for arg in "$@"; do
+  case "$arg" in
+    --with-tynn) WITH_TYNN=1 ;;
+    -h|--help)
+      sed -n '1,15p' "$0" | sed 's/^#\?//'
+      exit 0
+      ;;
+    *) echo "Unknown flag: $arg" >&2; exit 1 ;;
+  esac
+done
 
 # Colors (if terminal supports them)
 RED='\033[0;31m'
@@ -371,6 +392,87 @@ if [ $ENTRIES_ADDED -gt 0 ]; then
   ok "  Added $ENTRIES_ADDED entries to .gitignore"
 else
   ok "  .gitignore already up to date"
+fi
+
+# ============================================================================
+# Step 12: Optionally scaffold tynn-lite (--with-tynn)
+# ============================================================================
+# tynn-lite is the file-based agent harness used by the Aionima ($A0) project:
+# loop-prompt as the canonical standing prompt, checkpoint.mdc as the
+# cycle-close ledger, pending-questions.mdc for owner-blocking decisions,
+# _discovery/learnings/{short-hash}.md for per-commit insight capture.
+# See templates/tynn-lite/_discovery/tynn-lite.md for the full spec.
+
+if [ "$WITH_TYNN" = "1" ]; then
+  info "Scaffolding tynn-lite agent harness..."
+
+  TYNN_TEMPLATE="$BOTS_SRC/templates/tynn-lite"
+  if [ ! -d "$TYNN_TEMPLATE" ]; then
+    fail "tynn-lite template not found at $TYNN_TEMPLATE — your bots checkout is missing the templates/tynn-lite/ tree."
+  fi
+
+  INSTALL_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  PROJECT_NAME="$(basename "$PROJECT_ROOT")"
+
+  # Scaffold _plans/_next/ — preserve existing state files (idempotent)
+  mkdir -p "$PROJECT_ROOT/_plans/_next"
+  for src in "$TYNN_TEMPLATE/_plans/_next/"*.mdc; do
+    base="$(basename "$src")"
+    dst="$PROJECT_ROOT/_plans/_next/$base"
+    if [ -f "$dst" ]; then
+      ok "  $base already exists — preserved"
+    else
+      sed "s|__PROJECT_NAME__|$PROJECT_NAME|g; s|__INSTALL_DATE__|$INSTALL_DATE|g" "$src" > "$dst"
+      ok "  $base scaffolded"
+    fi
+  done
+
+  # Scaffold _discovery/ — always refresh tynn-lite.md (the spec); never
+  # touch _discovery/learnings/ which holds historical commits.
+  mkdir -p "$PROJECT_ROOT/_discovery/learnings"
+  if [ ! -f "$PROJECT_ROOT/_discovery/learnings/.gitkeep" ]; then
+    cp "$TYNN_TEMPLATE/_discovery/learnings/.gitkeep" "$PROJECT_ROOT/_discovery/learnings/.gitkeep" 2>/dev/null || \
+      echo "# per-commit learnings land here as <short-hash>.md" > "$PROJECT_ROOT/_discovery/learnings/.gitkeep"
+  fi
+  cp "$TYNN_TEMPLATE/_discovery/tynn-lite.md" "$PROJECT_ROOT/_discovery/tynn-lite.md"
+  ok "  _discovery/tynn-lite.md refreshed"
+
+  # Append a tynn-lite section to CLAUDE.md (idempotent — bounded by markers)
+  if [ -f "$PROJECT_ROOT/CLAUDE.md" ]; then
+    if ! grep -q "<!-- tynn-lite:start -->" "$PROJECT_ROOT/CLAUDE.md"; then
+      cat >> "$PROJECT_ROOT/CLAUDE.md" <<'TYNN_LITE_EOF'
+
+<!-- tynn-lite:start -->
+## tynn-lite — agent harness
+
+This project uses [tynn-lite](_discovery/tynn-lite.md) as its iterative-work agent harness.
+
+- Standing prompt: [`_plans/_next/loop-prompt.mdc`](_plans/_next/loop-prompt.mdc) (single source of truth for `/loop` cron + `/next` slash command)
+- Cycle ledger: [`_plans/_next/checkpoint.mdc`](_plans/_next/checkpoint.mdc) (lastShipped, in-flight task, progress, cycle log)
+- Owner-blocking questions: [`_plans/_next/pending-questions.mdc`](_plans/_next/pending-questions.mdc) (statusline-counted)
+- Per-commit insights: `_discovery/learnings/{short-hash}.md`
+
+**Discipline (per `_discovery/tynn-lite.md`):**
+- ship-first / walk-last; slice schema → infra → behavior → wiring → UI
+- 3 same-commit guards before every commit (typecheck / route-check / staged-check — adapt to project)
+- AskUserQuestion for any owner question; never trail in prose
+- Pending questions are owner-only — never self-answer
+- Per-commit learnings to `_discovery/learnings/{short-hash}.md`
+- End-of-cycle indicator counts (🛑 Show-Stoppers / ⚠️ Drift / ❓ Clarity)
+
+To run an autonomous cycle: `/loop 30m <your standing prompt>` (body in `loop-prompt.mdc`).
+To advance manually: `/next`.
+<!-- tynn-lite:end -->
+TYNN_LITE_EOF
+      ok "  appended tynn-lite section to CLAUDE.md"
+    else
+      ok "  tynn-lite section already in CLAUDE.md — preserved"
+    fi
+  else
+    warn "  no CLAUDE.md — skip section append (create one + re-run with --with-tynn to refresh)"
+  fi
+
+  ok "tynn-lite scaffolded — read _discovery/tynn-lite.md, customize _plans/_next/loop-prompt.mdc, then /loop or /next"
 fi
 
 # ============================================================================

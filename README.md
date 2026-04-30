@@ -17,6 +17,25 @@ cd my-project
 pwsh $env:USERPROFILE\.bots\install.ps1
 ```
 
+### Optional: install with `--with-tynn`
+
+Add the `--with-tynn` flag to also scaffold **tynn-lite** — the iterative-work agent harness used by the Aionima ($A0) project. This drops a standing-loop prompt, cycle-close ledger, owner-blocking-question log, and per-commit learning structure into the project so Claude Code can run autonomous cycles via `/loop` or `/next`.
+
+```bash
+bash ~/.bots/install.sh --with-tynn
+```
+
+What gets added:
+- `_plans/_next/loop-prompt.mdc` — canonical standing prompt fired by `/loop` / `/next`
+- `_plans/_next/checkpoint.mdc` — cycle-close ledger (lastShipped, in-flight, progress)
+- `_plans/_next/pending-questions.mdc` — statusline-counted owner-blocking questions
+- `_plans/_next/answered-questions-log.mdc` — append-only history
+- `_discovery/tynn-lite.md` — full spec + discipline reference
+- `_discovery/learnings/` — destination for per-commit insight files
+- A tynn-lite section appended to `CLAUDE.md` linking the above
+
+Idempotent — re-running with `--with-tynn` refreshes `tynn-lite.md` and the CLAUDE.md section but preserves your project's accumulated state.
+
 ## Upgrade
 
 Update an existing installation to the latest source without losing active jobs or custom routing rules:

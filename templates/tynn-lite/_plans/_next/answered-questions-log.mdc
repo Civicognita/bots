@@ -1,0 +1,12 @@
+---
+purpose: Append-only history of resolved owner questions (moved here from pending-questions.mdc)
+lastUpdated: "__INSTALL_DATE__"
+totalAnswered: 0
+schemaVersion: 1
+---
+
+# Answered questions — append-only log
+
+When a pending question gets an owner answer, move the entry here (with the answer captured inline) instead of deleting it. Preserves the decision trail for future cycles.
+
+(no answered questions yet)

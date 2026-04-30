@@ -1,0 +1,53 @@
+---
+purpose: Canonical standing prompt for /loop and /next iterative-work cycles
+projectScope: __PROJECT_NAME__
+schemaVersion: 3
+lastUpdated: "__INSTALL_DATE__"
+loop:
+  running: false
+  cron: null
+  jobId: null
+  cadence: "Loop offline — fresh tynn-lite install. Re-fire via /loop 30m + the body section to start an autonomous cycle."
+mode: drive-to-done
+---
+
+# Standing loop prompt
+
+This file is the **single source of truth** for the iterative-work cron prompt + the `/next` slash command body. When firing CronCreate or updating `~/.claude/commands/next.md`, copy the body section below verbatim.
+
+**Why a single source of truth:** the cron prompt is fired by CronCreate (session-only memory) and the `/next` command body lives at `~/.claude/commands/next.md` (user-scope). Without one canonical file, the two drift independently. This file is the canonical text; the other surfaces are derived.
+
+**When to update:** any time the standing prompt changes. After updating, also propagate to `~/.claude/commands/next.md` AND re-fire CronCreate with the new body if a loop is currently running.
+
+---
+
+## BODY (copy this verbatim into CronCreate / `/next` command)
+
+```
+[iterative-work mode]
+
+Active project: __PROJECT_NAME__. Goal: <fill in your project's current focus>.
+
+First action — consume prior markers (don't re-derive):
+- Read _plans/_next/checkpoint.mdc for last-shipped + in-flight + next pick
+- Read _plans/_next/pending-questions.mdc for owner-blocking decisions (statusline shows the count)
+- Query tynn (mcp__tynn__next + mcp__tynn__project) for live state — OR fall back to checkpoint's "next pickups" if MCP not connected
+
+Then: pick the highest-priority READY task in the active focus + ship a slice.
+
+Discipline (per _discovery/tynn-lite.md):
+- ship-first / walk-last; slice schema → infra → behavior → wiring → UI
+- honest scope-down when first step fails; look-for-MORE without scope creep
+- AskUserQuestion for any owner question (never trail in prose)
+- 3 same-commit guards at every commit (typecheck, route-check, docs-check, staged-check — adapt to your project's package manager)
+- mark progress in tynn live (or in checkpoint frontmatter); per-commit learnings to _discovery/learnings/{short-hash}.md
+- end-of-cycle indicator counts (🛑 Show-Stoppers / ⚠️ Drift / ❓ Clarity)
+- update _plans/_next/checkpoint.mdc at milestones / pivot points
+
+Stop conditions (autonomous loop self-disables):
+- All VIP backlog items finished → flip loop-prompt.mdc loop.running to false + CronDelete the job + announce
+- Fundamental env block → file pending-question + flip running to false + CronDelete the job
+- 3-cycle per-task budget acts as inner protection against fix-test-fix infinite loops
+
+AskUserQuestion is for genuinely blocking owner judgment ONLY (architectural choices, monetary decisions, security/compliance permissions). Pending questions log: _plans/_next/pending-questions.mdc; surface via AskUserQuestion when owner returns.
+```

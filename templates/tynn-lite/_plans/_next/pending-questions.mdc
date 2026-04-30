@@ -1,0 +1,37 @@
+---
+indicators:
+  showStoppers: 0
+  drift: 0
+  clarity: 0
+  qaVerification: 0
+lastUpdated: "__INSTALL_DATE__"
+totalPending: 0
+totalAnswered: 0
+qaPending: 0
+schemaVersion: 1
+---
+
+# Pending questions log
+
+This file tracks questions that arose during /loop or cron-driven cycles when the owner was away.
+
+The frontmatter `indicators` block is read by the Claude terminal statusline + similar surfaces to render a count badge (analogous to "pending PRs"). Always update the frontmatter counts when adding/resolving entries.
+
+When the owner returns, surface accumulated questions via `AskUserQuestion` (bundle up to 5 per call), then move resolved entries to `answered-questions-log.mdc` (also frontmatter-indexed, append-only).
+
+**Counting rules:**
+- **showStoppers** — questions tagged `show-stopper`: tied to blocked stories/tasks that can't progress without an answer
+- **drift** — questions tagged `drift`: detected divergence between system docs and codebase
+- **clarity** — questions tagged `clarity`: terms/concepts/workflows not understood in project context
+- **totalPending** = showStoppers + drift + clarity (sanity-checked sum)
+
+**What is NOT a pending question:**
+- "Owner verifies at stable" framings on qa work — that is agent qa work, not an owner deferral.
+- "Owner-supervised" markers on env tasks — that is agent env work.
+- Anything the agent is uncertain about scope but can find by reading code/tynn — that's investigation work, not a question.
+
+Pending questions are reserved for **genuinely owner-judgment-only** items: architectural choices, monetary decisions, security/compliance permissions, conflicting stakeholder requests.
+
+---
+
+(no pending questions yet)

@@ -1,0 +1,27 @@
+---
+lastShipped:
+  version: null
+  commit: null
+inFlightTask: null
+inFlightTaskState: "none"
+activeFocus: "Set initial focus by editing this file or running /next"
+pendingQuestions: 0
+focusVersion: null
+progress:
+  done: 0
+  qa: 0
+  total: 0
+  asOf: "__INSTALL_DATE__"
+schemaVersion: 2
+lastUpdated: "__INSTALL_DATE__"
+---
+
+# Checkpoint — cycle-close ledger
+
+Each completed cycle appends a `cycleN:` block here. Frontmatter carries running totals consumed by the statusline.
+
+**Initial state — empty.** Edit this file once per cycle close to capture what shipped, what tests pass, where the work paused, and the next pickup.
+
+## Cycle log
+
+(no cycles yet — your first cycle will land here)
